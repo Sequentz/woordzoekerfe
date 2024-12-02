@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchThemes, selectTheme } from "./themesSlice";
+import { fetchWords } from "../words/wordsSlice";
 
 const ThemesComponent = ({ onSelect }) => {
   const dispatch = useDispatch();

@@ -1,0 +1,59 @@
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f4f4f4; // Optionele achtergrondkleur
+}
+
+.spintitel {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.rad {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; // Volledige hoogte
+}
+
+.wiel-container {
+  position: relative;
+  width: 300px; // Maak de klikbare container even groot als het wiel
+  height: 300px;
+  cursor: pointer; // Zorg dat het wiel klikbaar is
+  transition: transform 0.3s ease;
+
+  &:hover {
+    transform: scale(1.05); // Vergroot licht bij hover
+  }
+
+  &:active {
+    transform: scale(0.95); // Verklein een beetje bij klik
+  }
+}
+
+.selected-theme {
+  margin-top: 20px;
+  font-size: 1.2rem;
+  color: #444;
+
+  span {
+    color: #df3428;
+    font-weight: bold;
+  }
+}
+.word-search-grid {
+  text-align: center;
+}
