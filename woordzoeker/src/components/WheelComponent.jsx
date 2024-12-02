@@ -39,7 +39,7 @@ const WheelComponent = ({ themes, onSelect }) => {
           t
           backgroundColors={["#3e3e3e", "#df3428"]}
           textColors={["#ffffff"]}
-          spinDuration={1.5}
+          spinDuration={0.2}
         />
       </div>
     </div>
