@@ -202,14 +202,16 @@ const WordSearchGame = ({ themeId }) => {
         }}
       ></div>
 
+      {/* Woordenlijst */}
       <div className="woordenlijst">
         <ul className="list-disc list-inside">
           {words.map((word) => {
             const wordLetters = word.name.toUpperCase().split("");
+
+            // Controleer of alle letters van het woord in `markedCells` staan
             const isWordFound = wordLetters.every((letter) =>
               markedCells.some(
-                (cell) =>
-                  grid[cell.rowIndex]?.[cell.colIndex] === wordLetters[idx]
+                (cell) => grid[cell.rowIndex]?.[cell.colIndex] === letter
               )
             );
 
@@ -219,6 +221,11 @@ const WordSearchGame = ({ themeId }) => {
                 className={`text-lg ${
                   isWordFound ? "line-through text-green-500" : ""
                 }`}
+                style={{
+                  backgroundColor: isWordFound ? "lightgreen" : "transparent",
+                  padding: "5px",
+                  borderRadius: "4px",
+                }}
               >
                 {word.name}
               </li>
