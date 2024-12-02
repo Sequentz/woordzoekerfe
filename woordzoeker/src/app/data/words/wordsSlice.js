@@ -1,10 +1,10 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-// Base URL voor API
+// INFO: Basis URL van de API
 const API_BASE_URL = "https://eindwerkbe.ddev.site/api/v1";
 
-// Async Thunk voor woorden ophalen
+// INFO: Async Thunk om de woorden op te halen.
 export const fetchWords = createAsyncThunk(
   "words/fetchWords",
   async (themeId, { rejectWithValue }) => {
@@ -12,8 +12,8 @@ export const fetchWords = createAsyncThunk(
       const response = await axios.get(
         `${API_BASE_URL}/themes/${themeId}/words`
       );
-      console.log("API Response:", response.data); // Controleer de structuur
-      return response.data.words; // Haal alleen de woordenlijst op
+      console.log("API Response:", response.data);
+      return response.data.words;
     } catch (error) {
       console.error("Error fetching words:", error);
       return rejectWithValue(
@@ -29,23 +29,13 @@ const wordsSlice = createSlice({
     words: [],
     status: "idle",
     error: null,
-    foundWords: [], // Toegevoegd voor gevonden woorden
-    markedCells: [], // Toegevoegd voor gemarkeerde cellen
+    foundWords: [],
+    markedCells: [],
   },
   reducers: {
-    markWordAsFound: (state, action) => {
-      // Voeg een gevonden woord toe aan foundWords
-      const word = action.payload;
-      if (!state.foundWords.includes(word)) {
-        state.foundWords.push(word);
-      }
-    },
-    markCells: (state, action) => {
-      // Markeer cellen als onderdeel van een gevonden woord
-      state.markedCells = [...state.markedCells, ...action.payload];
-    },
     resetGame: (state) => {
-      // Reset de state voor een nieuw spel
+      state.words = [];
+      state.status = "idle";
       state.foundWords = [];
       state.markedCells = [];
     },
@@ -54,12 +44,12 @@ const wordsSlice = createSlice({
     builder
       .addCase(fetchWords.pending, (state) => {
         state.status = "loading";
-        state.error = null; // Reset eventuele eerdere fouten
+        state.error = null;
       })
       .addCase(fetchWords.fulfilled, (state, action) => {
         console.log("Payload in Reducer:", action.payload);
         state.status = "succeeded";
-        state.words = action.payload || []; // Zet de opgehaalde woorden in de state
+        state.words = action.payload || [];
       })
       .addCase(fetchWords.rejected, (state, action) => {
         state.status = "failed";
@@ -68,6 +58,5 @@ const wordsSlice = createSlice({
   },
 });
 
-// Exporteer de acties en reducer
-export const { markWordAsFound, markCells, resetGame } = wordsSlice.actions;
+export const { resetGame } = wordsSlice.actions;
 export default wordsSlice.reducer;

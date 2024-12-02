@@ -10,8 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fireworks-js/react": "^2.10.8",
     "@reduxjs/toolkit": "^2.3.0",
     "axios": "^1.7.7",
+    "fireworks-js": "^2.10.8",
     "react": "^18.3.1",
     "react-custom-roulette": "^1.4.1",
     "react-dom": "^18.3.1",
