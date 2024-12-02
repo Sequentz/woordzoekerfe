@@ -30,17 +30,20 @@ const WheelComponent = ({ themes, onSelect }) => {
   return (
     <div className="rad">
       <h2 className="spintitel">Draai aan het rad!</h2>
-      <div className="wiel-container" onClick={handleClickWheel}>
-        <Wheel
-          mustStartSpinning={spinning}
-          prizeNumber={prizeNumber}
-          data={themeData}
-          onStopSpinning={handleStopSpinning}
-          t
-          backgroundColors={["#3e3e3e", "#df3428"]}
-          textColors={["#ffffff"]}
-          spinDuration={0.2}
-        />
+      <div className="wiel">
+        <div className="wiel-container" onClick={handleClickWheel}>
+          <Wheel
+            mustStartSpinning={spinning}
+            prizeNumber={prizeNumber}
+            data={themeData}
+            onStopSpinning={handleStopSpinning}
+            t
+            backgroundColors={["#3e3e3e", "#df3428"]}
+            textColors={["#ffffff"]}
+            spinDuration={0.2}
+            className="wheel"
+          />
+        </div>
       </div>
     </div>
   );

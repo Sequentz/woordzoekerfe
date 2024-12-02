@@ -10,13 +10,37 @@ const WordSearchGame = ({ themeId }) => {
   const [selectedCells, setSelectedCells] = useState([]);
   const [markedCells, setMarkedCells] = useState([]);
   const [showFireworks, setShowFireworks] = useState(false);
-  const gridSize = 10;
+  const [gridSize, setGridSize] = useState(8); // Dynamisch gridSize
   const fireworksContainerRef = useRef(null);
 
-  // INFO: VUURWERKFUNCTIE
+  // INFO: Bereken gridSize op basis van schermgrootte
+  const calculateGridSize = () => {
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
+
+    // Neem de kleinere dimensie en pas een schaal toe
+    const maxSize = Math.min(screenWidth, screenHeight);
+    const size = Math.floor(maxSize / 50); // Stel celgrootte in op ~50px
+    return Math.max(8, Math.min(size, 20)); // Limiteer tussen 8x8 en 20x20
+  };
+
+  // INFO: Update gridSize bij component mount en schermresizing
+  useEffect(() => {
+    const updateGridSize = () => {
+      setGridSize(calculateGridSize());
+    };
+
+    updateGridSize(); // Initieel instellen
+    window.addEventListener("resize", updateGridSize); // Dynamisch aanpassen bij resizing
+
+    return () => {
+      window.removeEventListener("resize", updateGridSize);
+    };
+  }, []);
+
+  // INFO: Vuurwerkfunctie
   const startFireworks = () => {
     if (fireworksContainerRef.current) {
-      console.log("Start vuurwerk...");
       const fireworks = new Fireworks(fireworksContainerRef.current, {
         hue: { min: 0, max: 360 },
         delay: { min: 15, max: 30 },
@@ -37,21 +61,18 @@ const WordSearchGame = ({ themeId }) => {
       });
 
       fireworks.start();
-      setTimeout(() => {
-        fireworks.stop();
-        console.log("Vuurwerk gestopt.");
-      }, 10000);
+      setTimeout(() => fireworks.stop(), 10000);
     }
   };
 
-  // INFO: Ophalen van woorden bij het wijzigen van themeId
+  // INFO: Ophalen van woorden bij wijziging van themeId
   useEffect(() => {
     if (themeId) {
       dispatch(fetchWords(themeId));
     }
   }, [themeId, dispatch]);
 
-  //INFO: Genereert het grid en plaatst de woorden.
+  // INFO: Genereert het grid en plaatst de woorden
   useEffect(() => {
     if (status === "succeeded" && words?.length > 0) {
       const initializeGrid = () =>
@@ -60,10 +81,10 @@ const WordSearchGame = ({ themeId }) => {
         );
 
       const directions = [
-        { x: 1, y: 0 }, // INFO: Horizontaal
-        { x: 0, y: 1 }, // INFO: Verticaal
-        { x: 1, y: 1 }, // INFO: Diagonaal naar rechts-onder
-        { x: 1, y: -1 }, // INFO: Diagonaal naar rechts-boven
+        { x: 1, y: 0 },
+        { x: 0, y: 1 },
+        { x: 1, y: 1 },
+        { x: 1, y: -1 },
       ];
 
       const placeWords = (grid, words) => {
@@ -113,9 +134,9 @@ const WordSearchGame = ({ themeId }) => {
       const newGrid = placeWords(initializeGrid(), words);
       setGrid(newGrid);
     }
-  }, [status, words]);
+  }, [status, words, gridSize]);
 
-  // INFO: Controle of alle woorden gevonden zijn
+  // INFO: Controleer of alle woorden gevonden zijn
   useEffect(() => {
     const allWordsFound = words.every((word) => {
       const wordLetters = word.name.toUpperCase().split("");
@@ -127,7 +148,6 @@ const WordSearchGame = ({ themeId }) => {
     });
 
     if (allWordsFound && words.length > 0) {
-      console.log("Alle woorden gevonden!");
       setShowFireworks(true);
       startFireworks();
     }
@@ -138,7 +158,6 @@ const WordSearchGame = ({ themeId }) => {
     const newSelectedCells = [...selectedCells, { rowIndex, colIndex }];
     setSelectedCells(newSelectedCells);
 
-    // INFO: Reset de cel na 4  seconden
     setTimeout(() => {
       setSelectedCells((prev) =>
         prev.filter(
@@ -147,7 +166,6 @@ const WordSearchGame = ({ themeId }) => {
       );
     }, 4000);
 
-    // INFO: Controle of een woord volledig is geselecteerd
     words.forEach((word) => {
       const wordLetters = word.name.toUpperCase().split("");
       const matches = wordLetters.every((_, idx) => {
@@ -158,7 +176,6 @@ const WordSearchGame = ({ themeId }) => {
       });
 
       if (matches) {
-        // INFO: Voeg de cellen toe aan gemarkeerde cellen
         setMarkedCells((prev) => [...prev, ...newSelectedCells]);
       }
     });
@@ -168,9 +185,8 @@ const WordSearchGame = ({ themeId }) => {
   if (status === "failed") return <p>Fout bij het laden van woorden.</p>;
 
   return (
-    <div>
-      <h2>Woordzoeker</h2>
-      {/* Container voor vuurwerk */}
+    <div className="woordzoeker">
+      <h2>Woordzoeker van de dag!</h2>
       <div
         id="fireworks-container"
         ref={fireworksContainerRef}
@@ -186,15 +202,11 @@ const WordSearchGame = ({ themeId }) => {
         }}
       ></div>
 
-      {/* Woordenlijst */}
-      <div className="mb-4">
-        <h3 className="text-xl font-semibold">Zoek deze woorden:</h3>
+      <div className="woordenlijst">
         <ul className="list-disc list-inside">
           {words.map((word) => {
             const wordLetters = word.name.toUpperCase().split("");
-
-            // INFO: Controle of alle letters van het woord in `markedCells` staan
-            const isWordFound = wordLetters.every((letter, idx) =>
+            const isWordFound = wordLetters.every((letter) =>
               markedCells.some(
                 (cell) =>
                   grid[cell.rowIndex]?.[cell.colIndex] === wordLetters[idx]
@@ -215,45 +227,47 @@ const WordSearchGame = ({ themeId }) => {
         </ul>
       </div>
 
-      {/* Woordzoeker Grid */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: `repeat(${gridSize}, 40px)`,
-          gap: "2px",
-        }}
-      >
-        {grid.map((row, rowIndex) =>
-          row.map((letter, colIndex) => (
-            <div
-              key={`${rowIndex}-${colIndex}`}
-              style={{
-                width: 40,
-                height: 40,
-                border: "1px solid black",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                fontWeight: "bold",
-                cursor: "pointer",
-                backgroundColor: markedCells.some(
-                  (cell) =>
-                    cell.rowIndex === rowIndex && cell.colIndex === colIndex
-                )
-                  ? "green"
-                  : selectedCells.some(
-                      (cell) =>
-                        cell.rowIndex === rowIndex && cell.colIndex === colIndex
-                    )
-                  ? "yellow"
-                  : "white",
-              }}
-              onClick={() => handleCellClick(rowIndex, colIndex)}
-            >
-              {letter}
-            </div>
-          ))
-        )}
+      <div className="woordzoeker-grid">
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: `repeat(${gridSize}, 40px)`,
+            gap: "2px",
+          }}
+        >
+          {grid.map((row, rowIndex) =>
+            row.map((letter, colIndex) => (
+              <div
+                key={`${rowIndex}-${colIndex}`}
+                style={{
+                  width: 40,
+                  height: 40,
+                  border: "1px solid black",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                  backgroundColor: markedCells.some(
+                    (cell) =>
+                      cell.rowIndex === rowIndex && cell.colIndex === colIndex
+                  )
+                    ? "lightgreen"
+                    : selectedCells.some(
+                        (cell) =>
+                          cell.rowIndex === rowIndex &&
+                          cell.colIndex === colIndex
+                      )
+                    ? "yellow"
+                    : "white",
+                }}
+                onClick={() => handleCellClick(rowIndex, colIndex)}
+              >
+                {letter}
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );

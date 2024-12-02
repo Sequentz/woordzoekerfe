@@ -5,6 +5,7 @@ body {
 }
 
 #root {
+  width: 100%;
   min-height: 100vh;
   display: flex;
   justify-content: center;
@@ -28,19 +29,19 @@ body {
   align-items: center;
   height: 100vh;
 }
+.wiel {
+  .wiel-container {
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    width: 100%;
+    &:hover {
+      transform: scale(1.05);
+    }
 
-.wiel-container {
-  position: relative;
-  width: 300px;
-  cursor: pointer;
-  transition: transform 0.3s ease;
-  width: 100%;
-  &:hover {
-    transform: scale(1.05);
-  }
-
-  &:active {
-    transform: scale(0.95);
+    &:active {
+      transform: scale(0.95);
+    }
   }
 }
 
@@ -56,4 +57,31 @@ body {
 }
 .word-search-grid {
   text-align: center;
+}
+
+.woordzoeker {
+  font-family: JetBrains Mono, monospace;
+  h2 {
+    text-align: center;
+  }
+  ul {
+    padding: 30px;
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+    gap: 10px;
+    li {
+      border: 1px solid #333;
+      padding: 5px 10px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+  }
+  .woordzoeker-grid {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
 }
