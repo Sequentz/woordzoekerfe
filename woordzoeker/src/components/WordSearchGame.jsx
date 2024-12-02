@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchWords } from "../app/data/words/wordsSlice";
-import { Fireworks } from "fireworks-js";
+import anime from "animejs";
 
 const WordSearchGame = ({ themeId }) => {
   const dispatch = useDispatch();
@@ -9,9 +9,7 @@ const WordSearchGame = ({ themeId }) => {
   const [grid, setGrid] = useState([]);
   const [selectedCells, setSelectedCells] = useState([]);
   const [markedCells, setMarkedCells] = useState([]);
-  const [showFireworks, setShowFireworks] = useState(false);
   const [gridSize, setGridSize] = useState(8); // Dynamisch gridSize
-  const fireworksContainerRef = useRef(null);
 
   // INFO: Bereken gridSize op basis van schermgrootte
   const calculateGridSize = () => {
@@ -37,33 +35,6 @@ const WordSearchGame = ({ themeId }) => {
       window.removeEventListener("resize", updateGridSize);
     };
   }, []);
-
-  // INFO: Vuurwerkfunctie
-  const startFireworks = () => {
-    if (fireworksContainerRef.current) {
-      const fireworks = new Fireworks(fireworksContainerRef.current, {
-        hue: { min: 0, max: 360 },
-        delay: { min: 15, max: 30 },
-        rocketsPoint: 50,
-        speed: 10,
-        acceleration: 1.05,
-        friction: 0.98,
-        gravity: 1.5,
-        particles: 100,
-        trace: 3,
-        explosion: 20,
-        boundaries: {
-          x: 0,
-          y: 0,
-          width: fireworksContainerRef.current.offsetWidth,
-          height: fireworksContainerRef.current.offsetHeight,
-        },
-      });
-
-      fireworks.start();
-      setTimeout(() => fireworks.stop(), 10000);
-    }
-  };
 
   // INFO: Ophalen van woorden bij wijziging van themeId
   useEffect(() => {
@@ -136,6 +107,20 @@ const WordSearchGame = ({ themeId }) => {
     }
   }, [status, words, gridSize]);
 
+  // INFO: Anime.js animatiefunctie
+  const playAnimation = () => {
+    anime({
+      targets: ".woordzoeker-grid div", // Selecteer de cellen in het grid
+      scale: [
+        { value: 1.5, duration: 500 },
+        { value: 1, duration: 500 },
+      ],
+      backgroundColor: "#AAF683",
+      easing: "easeInOutQuad",
+      delay: anime.stagger(50), // Stagger de animatie
+    });
+  };
+
   // INFO: Controleer of alle woorden gevonden zijn
   useEffect(() => {
     const allWordsFound = words.every((word) => {
@@ -148,8 +133,8 @@ const WordSearchGame = ({ themeId }) => {
     });
 
     if (allWordsFound && words.length > 0) {
-      setShowFireworks(true);
-      startFireworks();
+      playAnimation(); // Speel de animatie af
+      console.log("Alle woorden gevonden!");
     }
   }, [markedCells, words, grid]);
 
@@ -187,20 +172,6 @@ const WordSearchGame = ({ themeId }) => {
   return (
     <div className="woordzoeker">
       <h2>Woordzoeker van de dag!</h2>
-      <div
-        id="fireworks-container"
-        ref={fireworksContainerRef}
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "100vw",
-          height: "100vh",
-          pointerEvents: "none",
-          zIndex: 9999,
-          backgroundColor: "transparent",
-        }}
-      ></div>
 
       {/* Woordenlijst */}
       <div className="woordenlijst">
