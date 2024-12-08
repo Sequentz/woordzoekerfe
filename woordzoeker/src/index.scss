@@ -85,3 +85,17 @@ body {
     align-items: center;
   }
 }
+.completed {
+  position: absolute;
+  border-radius: 20%;
+  width: 100%;
+  text-align: center;
+  background-color: blue;
+  color: white;
+  h2 {
+    font-size: 1rem;
+  }
+  p {
+    font-size: 0.6rem;
+  }
+}
