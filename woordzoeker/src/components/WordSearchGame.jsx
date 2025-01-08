@@ -12,8 +12,8 @@ const WordSearchGame = ({ themeId }) => {
   const [grid, setGrid] = useState([]);
   const [selectedCells, setSelectedCells] = useState([]);
   const [markedCells, setMarkedCells] = useState([]);
-  const [gridSize, setGridSize] = useState(8); // Dynamisch gridSize
-  const [showComponent, setShowComponent] = useState(false); // Toegevoegd om de component te tonen
+  const [gridSize, setGridSize] = useState(8);
+  const [showComponent, setShowComponent] = useState(false);
 
   // INFO: Bereken gridSize op basis van schermgrootte
   const calculateGridSize = () => {
@@ -54,7 +54,6 @@ const WordSearchGame = ({ themeId }) => {
     return () => clearInterval(timer);
   }, []);
 
-  // INFO: UseEffect om de huidige tijd op te slaan in localeStorage
   useEffect(() => {
     const allWordsFoundStatus = words.every((word) => {
       const wordLetters = word.name.toUpperCase().split("");
@@ -73,37 +72,36 @@ const WordSearchGame = ({ themeId }) => {
         const now = Math.floor(Date.now() / 1000);
         localStorage.setItem("completedTime", now.toString());
         setIsCompletedToday(true);
-        setTimeLeft(24 * 60 * 60); // Start de 24-uurs timer
       }, 2000);
     }
   }, [markedCells, words, grid]);
 
   // INFO: UseEffect voor de timer
   useEffect(() => {
-    const startTime = localStorage.getItem("woordzoekerStartTime");
+    const completedTime = localStorage.getItem("completedTime");
     const now = Math.floor(Date.now() / 1000);
 
-    if (startTime) {
-      const elapsed = now - parseInt(startTime, 10);
-      setTimeLeft(Math.max(0, 24 * 60 * 60 - elapsed));
-    } else {
-      // Sla de huidige tijd op als starttijd
-      localStorage.setItem("woordzoekerStartTime", now.toString());
+    if (completedTime) {
+      const elapsed = now - parseInt(completedTime, 10);
+      if (elapsed < 24 * 60 * 60) {
+        setIsCompletedToday(true);
+        setTimeLeft(24 * 60 * 60 - elapsed);
+      } else {
+        // Als de tijd verlopen is, reset de status
+        localStorage.removeItem("completedTime");
+        setIsCompletedToday(false);
+      }
     }
 
-    // Timer die elke seconde aftelt
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    // Als de puzzel voltooid is, toon direct de juiste status
+    if (isCompletedToday) {
+      const timer = setInterval(() => {
+        setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
 
-    return () => clearInterval(timer); // Opruimen bij unmount
-  }, []);
+      return () => clearInterval(timer);
+    }
+  }, [isCompletedToday]);
 
   useEffect(() => {
     const updateGridSize = () => {
