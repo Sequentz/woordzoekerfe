@@ -31,6 +31,9 @@ const WordSearchGame = ({ themeId }) => {
     const secs = String(seconds % 60).padStart(2, "0");
     return `${hours}:${minutes}:${secs}`;
   };
+
+  //INFO: UseEffect voor gridSize
+
   // INFO: UseEffect voor isCompleted
   useEffect(() => {
     const completedTime = localStorage.getItem("completedTime");
