@@ -72,7 +72,7 @@ const WordSearchGame = ({ themeId }) => {
         const now = Math.floor(Date.now() / 1000);
         localStorage.setItem("completedTime", now.toString());
         setIsCompletedToday(true);
-      }, 2000);
+      }, 6000);
     }
   }, [markedCells, words, grid]);
 
@@ -213,7 +213,7 @@ const WordSearchGame = ({ themeId }) => {
 
       setTimeout(() => {
         setShowComponent(true);
-      }, 2000);
+      }, 6000);
 
       console.log("Alle woorden gevonden!");
     }
@@ -251,104 +251,91 @@ const WordSearchGame = ({ themeId }) => {
 
   return (
     <div className="woordzoeker">
-      {isCompletedToday ? (
+      {showComponent ? (
         <div style={{ textAlign: "center", marginTop: "20px" }}>
-          <h3>Je hebt de puzzel vandaag al voltooid!</h3>
-          <p>
-            Kom morgen terug! Time left: <strong>{formatTime(timeLeft)}</strong>
+          <p style={{ fontSize: "1.5rem", color: "green" }}>
+            Je hebt alle woorden gevonden!
           </p>
         </div>
       ) : (
         <>
-          {showComponent ? (
-            <div style={{ textAlign: "center", marginTop: "20px" }}>
-              <h3>Proficiat! Alle woorden zijn gevonden!</h3>
-              <p>
-                Time left: <strong>{formatTime(timeLeft)}</strong>
-              </p>
-            </div>
-          ) : (
-            <>
-              <h2>Woordzoeker van de dag!</h2>
-              {/* Woordenlijst */}
-              <div className="woordenlijst">
-                <ul className="list-disc list-inside">
-                  {words.map((word) => {
-                    const wordLetters = word.name.toUpperCase().split("");
-                    const isWordFound = wordLetters.every((letter) =>
-                      markedCells.some(
+          <h2>Woordzoeker van de dag!</h2>
+          {/* Woordenlijst */}
+          <div className="woordenlijst">
+            <ul className="list-disc list-inside">
+              {words.map((word) => {
+                const wordLetters = word.name.toUpperCase().split("");
+                const isWordFound = wordLetters.every((letter) =>
+                  markedCells.some(
+                    (cell) => grid[cell.rowIndex]?.[cell.colIndex] === letter
+                  )
+                );
+
+                return (
+                  <li
+                    key={word.id}
+                    className={`text-lg ${
+                      isWordFound ? "line-through text-green-500" : ""
+                    }`}
+                    style={{
+                      backgroundColor: isWordFound
+                        ? "lightgreen"
+                        : "transparent",
+                      padding: "5px",
+                      borderRadius: "4px",
+                    }}
+                  >
+                    {word.name}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
+          {/* Woordzoeker grid */}
+          <div className="woordzoeker-grid">
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: `repeat(${gridSize}, 40px)`,
+                gap: "2px",
+              }}
+            >
+              {grid.map((row, rowIndex) =>
+                row.map((letter, colIndex) => (
+                  <div
+                    key={`${rowIndex}-${colIndex}`}
+                    style={{
+                      width: 40,
+                      height: 40,
+                      border: "1px solid black",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      fontWeight: "bold",
+                      cursor: "pointer",
+                      backgroundColor: markedCells.some(
                         (cell) =>
-                          grid[cell.rowIndex]?.[cell.colIndex] === letter
+                          cell.rowIndex === rowIndex &&
+                          cell.colIndex === colIndex
                       )
-                    );
-
-                    return (
-                      <li
-                        key={word.id}
-                        className={`text-lg ${
-                          isWordFound ? "line-through text-green-500" : ""
-                        }`}
-                        style={{
-                          backgroundColor: isWordFound
-                            ? "lightgreen"
-                            : "transparent",
-                          padding: "5px",
-                          borderRadius: "4px",
-                        }}
-                      >
-                        {word.name}
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-
-              {/* Woordzoeker grid */}
-              <div className="woordzoeker-grid">
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: `repeat(${gridSize}, 40px)`,
-                    gap: "2px",
-                  }}
-                >
-                  {grid.map((row, rowIndex) =>
-                    row.map((letter, colIndex) => (
-                      <div
-                        key={`${rowIndex}-${colIndex}`}
-                        style={{
-                          width: 40,
-                          height: 40,
-                          border: "1px solid black",
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                          fontWeight: "bold",
-                          cursor: "pointer",
-                          backgroundColor: markedCells.some(
+                        ? "lightgreen"
+                        : selectedCells.some(
                             (cell) =>
                               cell.rowIndex === rowIndex &&
                               cell.colIndex === colIndex
                           )
-                            ? "lightgreen"
-                            : selectedCells.some(
-                                (cell) =>
-                                  cell.rowIndex === rowIndex &&
-                                  cell.colIndex === colIndex
-                              )
-                            ? "yellow"
-                            : "white",
-                        }}
-                        onClick={() => handleCellClick(rowIndex, colIndex)}
-                      >
-                        {letter}
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </>
-          )}
+                        ? "yellow"
+                        : "white",
+                    }}
+                    onClick={() => handleCellClick(rowIndex, colIndex)}
+                  >
+                    {letter}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </>
       )}
     </div>
