@@ -1,8 +1,7 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchWords } from "../app/data/words/wordsSlice";
 import anime from "animejs";
-import CompletedComponent from "./CompletedComponent";
 
 const WordSearchGame = ({ themeId }) => {
   const dispatch = useDispatch();
@@ -24,6 +23,7 @@ const WordSearchGame = ({ themeId }) => {
     const size = Math.floor(maxSize / 50);
     return Math.max(8, Math.min(size, 20));
   };
+
   // INFO: Functie om de tijd te formatteren
   const formatTime = (seconds) => {
     const hours = String(Math.floor(seconds / 3600)).padStart(2, "0");
@@ -31,6 +31,7 @@ const WordSearchGame = ({ themeId }) => {
     const secs = String(seconds % 60).padStart(2, "0");
     return `${hours}:${minutes}:${secs}`;
   };
+
   // INFO: UseEffect voor isCompleted
   useEffect(() => {
     const completedTime = localStorage.getItem("completedTime");
@@ -54,55 +55,27 @@ const WordSearchGame = ({ themeId }) => {
     return () => clearInterval(timer);
   }, []);
 
+  // Laad de grid en gemarkeerde cellen uit localStorage
   useEffect(() => {
-    const allWordsFoundStatus = words.every((word) => {
-      const wordLetters = word.name.toUpperCase().split("");
-      return wordLetters.every((letter) =>
-        markedCells.some(
-          (cell) => grid[cell.rowIndex]?.[cell.colIndex] === letter
-        )
-      );
-    });
+    const savedGrid = JSON.parse(localStorage.getItem("wordSearchGrid"));
+    const savedMarkedCells = JSON.parse(localStorage.getItem("markedCells"));
 
-    if (allWordsFoundStatus && words.length > 0) {
-      playAnimation();
-
-      setTimeout(() => {
-        setShowComponent(true);
-        const now = Math.floor(Date.now() / 1000);
-        localStorage.setItem("completedTime", now.toString());
-        setIsCompletedToday(true);
-      }, 6000);
+    if (savedGrid) {
+      setGrid(savedGrid);
     }
-  }, [markedCells, words, grid]);
 
-  // INFO: UseEffect voor de timer
+    if (savedMarkedCells) {
+      setMarkedCells(savedMarkedCells);
+    }
+  }, []);
+
+  // Sla de grid en gemarkeerde cellen op in localStorage wanneer ze veranderen
   useEffect(() => {
-    const completedTime = localStorage.getItem("completedTime");
-    const now = Math.floor(Date.now() / 1000);
+    localStorage.setItem("wordSearchGrid", JSON.stringify(grid));
+    localStorage.setItem("markedCells", JSON.stringify(markedCells));
+  }, [grid, markedCells]);
 
-    if (completedTime) {
-      const elapsed = now - parseInt(completedTime, 10);
-      if (elapsed < 24 * 60 * 60) {
-        setIsCompletedToday(true);
-        setTimeLeft(24 * 60 * 60 - elapsed);
-      } else {
-        // Als de tijd verlopen is, reset de status
-        localStorage.removeItem("completedTime");
-        setIsCompletedToday(false);
-      }
-    }
-
-    // Als de puzzel voltooid is, toon direct de juiste status
-    if (isCompletedToday) {
-      const timer = setInterval(() => {
-        setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
-      }, 1000);
-
-      return () => clearInterval(timer);
-    }
-  }, [isCompletedToday]);
-
+  // INFO: Update de gridSize bij het aanpassen van het scherm
   useEffect(() => {
     const updateGridSize = () => {
       setGridSize(calculateGridSize());
@@ -122,8 +95,9 @@ const WordSearchGame = ({ themeId }) => {
     }
   }, [themeId, dispatch]);
 
+  // INFO: Gebruik de geladen woorden om de grid in te stellen
   useEffect(() => {
-    if (status === "succeeded" && words?.length > 0) {
+    if (status === "succeeded" && words?.length > 0 && grid.length === 0) {
       const initializeGrid = () =>
         Array.from({ length: gridSize }, () =>
           Array.from({ length: gridSize }, () => "")
@@ -246,7 +220,7 @@ const WordSearchGame = ({ themeId }) => {
     });
   };
 
-  if (status === "loading") return <p>Woorden laden...</p>;
+  if (status === "loading" && grid.length === 0) return <p>Woorden laden...</p>;
   if (status === "failed") return <p>Fout bij het laden van woorden.</p>;
 
   return (
