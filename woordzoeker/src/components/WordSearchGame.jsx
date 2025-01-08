@@ -1,10 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchWords } from "../app/data/words/wordsSlice";
 import anime from "animejs";
+import CompletedComponent from "./CompletedComponent";
 
 const WordSearchGame = ({ themeId }) => {
   const dispatch = useDispatch();
+  const [isCompletedToday, setIsCompletedToday] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(0);
   const { words, status } = useSelector((state) => state.words);
   const [grid, setGrid] = useState([]);
   const [selectedCells, setSelectedCells] = useState([]);
@@ -12,7 +15,7 @@ const WordSearchGame = ({ themeId }) => {
   const [gridSize, setGridSize] = useState(8);
   const [showComponent, setShowComponent] = useState(false);
 
-  // Bereken gridSize op basis van schermgrootte
+  // INFO: Bereken gridSize op basis van schermgrootte
   const calculateGridSize = () => {
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
@@ -21,6 +24,84 @@ const WordSearchGame = ({ themeId }) => {
     const size = Math.floor(maxSize / 50);
     return Math.max(8, Math.min(size, 20));
   };
+  // INFO: Functie om de tijd te formatteren
+  const formatTime = (seconds) => {
+    const hours = String(Math.floor(seconds / 3600)).padStart(2, "0");
+    const minutes = String(Math.floor((seconds % 3600) / 60)).padStart(2, "0");
+    const secs = String(seconds % 60).padStart(2, "0");
+    return `${hours}:${minutes}:${secs}`;
+  };
+  // INFO: UseEffect voor isCompleted
+  useEffect(() => {
+    const completedTime = localStorage.getItem("completedTime");
+    const now = Math.floor(Date.now() / 1000);
+
+    if (completedTime) {
+      const elapsed = now - parseInt(completedTime, 10);
+      if (elapsed < 24 * 60 * 60) {
+        setIsCompletedToday(true);
+        setTimeLeft(24 * 60 * 60 - elapsed);
+      }
+    }
+
+    // Start de timer als er nog tijd over is
+    if (!isCompletedToday) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const allWordsFoundStatus = words.every((word) => {
+      const wordLetters = word.name.toUpperCase().split("");
+      return wordLetters.every((letter) =>
+        markedCells.some(
+          (cell) => grid[cell.rowIndex]?.[cell.colIndex] === letter
+        )
+      );
+    });
+
+    if (allWordsFoundStatus && words.length > 0) {
+      playAnimation();
+
+      setTimeout(() => {
+        setShowComponent(true);
+        const now = Math.floor(Date.now() / 1000);
+        localStorage.setItem("completedTime", now.toString());
+        setIsCompletedToday(true);
+      }, 6000);
+    }
+  }, [markedCells, words, grid]);
+
+  // INFO: UseEffect voor de timer
+  useEffect(() => {
+    const completedTime = localStorage.getItem("completedTime");
+    const now = Math.floor(Date.now() / 1000);
+
+    if (completedTime) {
+      const elapsed = now - parseInt(completedTime, 10);
+      if (elapsed < 24 * 60 * 60) {
+        setIsCompletedToday(true);
+        setTimeLeft(24 * 60 * 60 - elapsed);
+      } else {
+        // Als de tijd verlopen is, reset de status
+        localStorage.removeItem("completedTime");
+        setIsCompletedToday(false);
+      }
+    }
+
+    // Als de puzzel voltooid is, toon direct de juiste status
+    if (isCompletedToday) {
+      const timer = setInterval(() => {
+        setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [isCompletedToday]);
 
   useEffect(() => {
     const updateGridSize = () => {
@@ -120,7 +201,6 @@ const WordSearchGame = ({ themeId }) => {
   useEffect(() => {
     const allWordsFoundStatus = words.every((word) => {
       const wordLetters = word.name.toUpperCase().split("");
-      // Controleer of alle letters van het woord in markedCells zitten
       return wordLetters.every((letter) =>
         markedCells.some(
           (cell) => grid[cell.rowIndex]?.[cell.colIndex] === letter
@@ -173,7 +253,9 @@ const WordSearchGame = ({ themeId }) => {
     <div className="woordzoeker">
       {showComponent ? (
         <div style={{ textAlign: "center", marginTop: "20px" }}>
-          <h3>Proficiat! Alle woorden zijn gevonden!</h3>
+          <p style={{ fontSize: "1.5rem", color: "green" }}>
+            Je hebt alle woorden gevonden!
+          </p>
         </div>
       ) : (
         <>
@@ -259,5 +341,4 @@ const WordSearchGame = ({ themeId }) => {
     </div>
   );
 };
-
 export default WordSearchGame;
