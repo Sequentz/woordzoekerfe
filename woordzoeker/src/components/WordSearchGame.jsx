@@ -72,7 +72,7 @@ const WordSearchGame = ({ themeId }) => {
         const now = Math.floor(Date.now() / 1000);
         localStorage.setItem("completedTime", now.toString());
         setIsCompletedToday(true);
-      }, 2000);
+      }, 6000);
     }
   }, [markedCells, words, grid]);
 
