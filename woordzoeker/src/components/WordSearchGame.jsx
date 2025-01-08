@@ -1,13 +1,10 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchWords } from "../app/data/words/wordsSlice";
 import anime from "animejs";
-import CompletedComponent from "./CompletedComponent";
 
 const WordSearchGame = ({ themeId }) => {
   const dispatch = useDispatch();
-  const [isCompletedToday, setIsCompletedToday] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(0);
   const { words, status } = useSelector((state) => state.words);
   const [grid, setGrid] = useState([]);
   const [selectedCells, setSelectedCells] = useState([]);
@@ -15,7 +12,7 @@ const WordSearchGame = ({ themeId }) => {
   const [gridSize, setGridSize] = useState(8);
   const [showComponent, setShowComponent] = useState(false);
 
-  // INFO: Bereken gridSize op basis van schermgrootte
+  // Bereken gridSize op basis van schermgrootte
   const calculateGridSize = () => {
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
@@ -24,84 +21,6 @@ const WordSearchGame = ({ themeId }) => {
     const size = Math.floor(maxSize / 50);
     return Math.max(8, Math.min(size, 20));
   };
-  // INFO: Functie om de tijd te formatteren
-  const formatTime = (seconds) => {
-    const hours = String(Math.floor(seconds / 3600)).padStart(2, "0");
-    const minutes = String(Math.floor((seconds % 3600) / 60)).padStart(2, "0");
-    const secs = String(seconds % 60).padStart(2, "0");
-    return `${hours}:${minutes}:${secs}`;
-  };
-  // INFO: UseEffect voor isCompleted
-  useEffect(() => {
-    const completedTime = localStorage.getItem("completedTime");
-    const now = Math.floor(Date.now() / 1000);
-
-    if (completedTime) {
-      const elapsed = now - parseInt(completedTime, 10);
-      if (elapsed < 24 * 60 * 60) {
-        setIsCompletedToday(true);
-        setTimeLeft(24 * 60 * 60 - elapsed);
-      }
-    }
-
-    // Start de timer als er nog tijd over is
-    if (!isCompletedToday) return;
-
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    const allWordsFoundStatus = words.every((word) => {
-      const wordLetters = word.name.toUpperCase().split("");
-      return wordLetters.every((letter) =>
-        markedCells.some(
-          (cell) => grid[cell.rowIndex]?.[cell.colIndex] === letter
-        )
-      );
-    });
-
-    if (allWordsFoundStatus && words.length > 0) {
-      playAnimation();
-
-      setTimeout(() => {
-        setShowComponent(true);
-        const now = Math.floor(Date.now() / 1000);
-        localStorage.setItem("completedTime", now.toString());
-        setIsCompletedToday(true);
-      }, 2000);
-    }
-  }, [markedCells, words, grid]);
-
-  // INFO: UseEffect voor de timer
-  useEffect(() => {
-    const completedTime = localStorage.getItem("completedTime");
-    const now = Math.floor(Date.now() / 1000);
-
-    if (completedTime) {
-      const elapsed = now - parseInt(completedTime, 10);
-      if (elapsed < 24 * 60 * 60) {
-        setIsCompletedToday(true);
-        setTimeLeft(24 * 60 * 60 - elapsed);
-      } else {
-        // Als de tijd verlopen is, reset de status
-        localStorage.removeItem("completedTime");
-        setIsCompletedToday(false);
-      }
-    }
-
-    // Als de puzzel voltooid is, toon direct de juiste status
-    if (isCompletedToday) {
-      const timer = setInterval(() => {
-        setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
-      }, 1000);
-
-      return () => clearInterval(timer);
-    }
-  }, [isCompletedToday]);
 
   useEffect(() => {
     const updateGridSize = () => {
@@ -201,6 +120,7 @@ const WordSearchGame = ({ themeId }) => {
   useEffect(() => {
     const allWordsFoundStatus = words.every((word) => {
       const wordLetters = word.name.toUpperCase().split("");
+      // Controleer of alle letters van het woord in markedCells zitten
       return wordLetters.every((letter) =>
         markedCells.some(
           (cell) => grid[cell.rowIndex]?.[cell.colIndex] === letter
@@ -213,7 +133,7 @@ const WordSearchGame = ({ themeId }) => {
 
       setTimeout(() => {
         setShowComponent(true);
-      }, 2000);
+      }, 6000);
 
       console.log("Alle woorden gevonden!");
     }
@@ -251,107 +171,93 @@ const WordSearchGame = ({ themeId }) => {
 
   return (
     <div className="woordzoeker">
-      {isCompletedToday ? (
+      {showComponent ? (
         <div style={{ textAlign: "center", marginTop: "20px" }}>
-          <h3>Je hebt de puzzel vandaag al voltooid!</h3>
-          <p>
-            Kom morgen terug! Time left: <strong>{formatTime(timeLeft)}</strong>
-          </p>
+          <h3>Proficiat! Alle woorden zijn gevonden!</h3>
         </div>
       ) : (
         <>
-          {showComponent ? (
-            <div style={{ textAlign: "center", marginTop: "20px" }}>
-              <h3>Proficiat! Alle woorden zijn gevonden!</h3>
-              <p>
-                Time left: <strong>{formatTime(timeLeft)}</strong>
-              </p>
-            </div>
-          ) : (
-            <>
-              <h2>Woordzoeker van de dag!</h2>
-              {/* Woordenlijst */}
-              <div className="woordenlijst">
-                <ul className="list-disc list-inside">
-                  {words.map((word) => {
-                    const wordLetters = word.name.toUpperCase().split("");
-                    const isWordFound = wordLetters.every((letter) =>
-                      markedCells.some(
+          <h2>Woordzoeker van de dag!</h2>
+          {/* Woordenlijst */}
+          <div className="woordenlijst">
+            <ul className="list-disc list-inside">
+              {words.map((word) => {
+                const wordLetters = word.name.toUpperCase().split("");
+                const isWordFound = wordLetters.every((letter) =>
+                  markedCells.some(
+                    (cell) => grid[cell.rowIndex]?.[cell.colIndex] === letter
+                  )
+                );
+
+                return (
+                  <li
+                    key={word.id}
+                    className={`text-lg ${
+                      isWordFound ? "line-through text-green-500" : ""
+                    }`}
+                    style={{
+                      backgroundColor: isWordFound
+                        ? "lightgreen"
+                        : "transparent",
+                      padding: "5px",
+                      borderRadius: "4px",
+                    }}
+                  >
+                    {word.name}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
+          {/* Woordzoeker grid */}
+          <div className="woordzoeker-grid">
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: `repeat(${gridSize}, 40px)`,
+                gap: "2px",
+              }}
+            >
+              {grid.map((row, rowIndex) =>
+                row.map((letter, colIndex) => (
+                  <div
+                    key={`${rowIndex}-${colIndex}`}
+                    style={{
+                      width: 40,
+                      height: 40,
+                      border: "1px solid black",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      fontWeight: "bold",
+                      cursor: "pointer",
+                      backgroundColor: markedCells.some(
                         (cell) =>
-                          grid[cell.rowIndex]?.[cell.colIndex] === letter
+                          cell.rowIndex === rowIndex &&
+                          cell.colIndex === colIndex
                       )
-                    );
-
-                    return (
-                      <li
-                        key={word.id}
-                        className={`text-lg ${
-                          isWordFound ? "line-through text-green-500" : ""
-                        }`}
-                        style={{
-                          backgroundColor: isWordFound
-                            ? "lightgreen"
-                            : "transparent",
-                          padding: "5px",
-                          borderRadius: "4px",
-                        }}
-                      >
-                        {word.name}
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-
-              {/* Woordzoeker grid */}
-              <div className="woordzoeker-grid">
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: `repeat(${gridSize}, 40px)`,
-                    gap: "2px",
-                  }}
-                >
-                  {grid.map((row, rowIndex) =>
-                    row.map((letter, colIndex) => (
-                      <div
-                        key={`${rowIndex}-${colIndex}`}
-                        style={{
-                          width: 40,
-                          height: 40,
-                          border: "1px solid black",
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                          fontWeight: "bold",
-                          cursor: "pointer",
-                          backgroundColor: markedCells.some(
+                        ? "lightgreen"
+                        : selectedCells.some(
                             (cell) =>
                               cell.rowIndex === rowIndex &&
                               cell.colIndex === colIndex
                           )
-                            ? "lightgreen"
-                            : selectedCells.some(
-                                (cell) =>
-                                  cell.rowIndex === rowIndex &&
-                                  cell.colIndex === colIndex
-                              )
-                            ? "yellow"
-                            : "white",
-                        }}
-                        onClick={() => handleCellClick(rowIndex, colIndex)}
-                      >
-                        {letter}
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </>
-          )}
+                        ? "yellow"
+                        : "white",
+                    }}
+                    onClick={() => handleCellClick(rowIndex, colIndex)}
+                  >
+                    {letter}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </>
       )}
     </div>
   );
 };
+
 export default WordSearchGame;
